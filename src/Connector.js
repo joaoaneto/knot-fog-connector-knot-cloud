@@ -106,9 +106,16 @@ class Connector {
 
   async removeDevice(id) {
     const thingClient = this.clientThings[id];
-    thingClient.close();
-    delete this.clientThings[id];
-    await promisify(this.client, 'unregistered', this.client.unregister.bind(this.client), id);
+    if (await this.deviceExists(id) && thingClient) {
+      thingClient.close();
+      delete this.clientThings[id];
+      await promisify(this.client, 'unregistered', this.client.unregister.bind(this.client), id);
+    }
+  }
+
+  async deviceExists(id) {
+    const devices = await this.listDevices();
+    return devices.find(device => device.id === id);
   }
 
   async listDevices() {
